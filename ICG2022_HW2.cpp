@@ -1,4 +1,4 @@
-//#include <Windows.h>
+#include <Windows.h>
 
 #include "headers.h"
 #include "trianglemesh.h"
@@ -11,6 +11,8 @@ int screenWidth = 800;
 int screenHeight = 800;
 // Triangle mesh.
 TriangleMesh* mesh = nullptr;
+GLuint vbo;  //Vertex Buffer Object
+std::vector<GLuint> ibo;  //Index Buffer Object
 // Lights.
 DirectionalLight* dirLight = nullptr;
 PointLight* pointLight = nullptr;
@@ -128,7 +130,7 @@ void RenderSceneCB()
     TriangleMesh* mesh = sceneObj.mesh;
     if (sceneObj.mesh != nullptr) {
         // Update transform.
-        // curRotationY += rotStep;
+         //curRotationY += rotStep;
         glm::mat4x4 S = glm::scale(glm::mat4x4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
         glm::mat4x4 R = glm::rotate(glm::mat4x4(1.0f), glm::radians(curRotationY), glm::vec3(0, 1, 0));
         sceneObj.worldMatrix = S * R;
@@ -138,28 +140,27 @@ void RenderSceneCB()
 		// -------------------------------------------------------
         glm::mat4x4 normalMatrix = glm::transpose(glm::inverse(sceneObj.worldMatrix));
         glm::mat4x4 MVP = camera->GetProjMatrix() * camera->GetViewMatrix() * sceneObj.worldMatrix;
-        
-        
+        // M=model, V=view, P=projection
+
         // -------------------------------------------------------
-        // Add your rendering code here.  render = 從vertex到最後計算成fragment的過程
-        
+        // Add your rendering code here.  
         phongShadingShader->Bind();
-        
+
         // Transformation matrix.
         glUniformMatrix4fv(phongShadingShader->GetLocM(), 1, GL_FALSE, glm::value_ptr(sceneObj.worldMatrix));
         glUniformMatrix4fv(phongShadingShader->GetLocNM(), 1, GL_FALSE, glm::value_ptr(normalMatrix));
         glUniformMatrix4fv(phongShadingShader->GetLocMVP(), 1, GL_FALSE, glm::value_ptr(MVP));
-        
-        
+
+
         // Material properties.
         // 更新 uniform 顏色
-        for(int i = 0; i < mesh->GetNumSubMeshes(); i++){
+        for (int i = 0; i < mesh->GetNumSubMeshes(); i++) {
             glUniform3fv(phongShadingShader->GetLocKa(), 1, glm::value_ptr(sceneObj.mesh->GetKa(i)));
             glUniform3fv(phongShadingShader->GetLocKd(), 1, glm::value_ptr(sceneObj.mesh->GetKd(i)));
             glUniform3fv(phongShadingShader->GetLocKs(), 1, glm::value_ptr(sceneObj.mesh->GetKs(i)));
             glUniform1f(phongShadingShader->GetLocNs(), sceneObj.mesh->GetNs(i));
-         }
-        
+        }
+
         // Light data.
         if (dirLight != nullptr) {
             glUniform3fv(phongShadingShader->GetLocDirLightDir(), 1, glm::value_ptr(dirLight->GetDirection()));
@@ -170,14 +171,15 @@ void RenderSceneCB()
             glUniform3fv(phongShadingShader->GetLocPointLightIntensity(), 1, glm::value_ptr(pointLight->GetIntensity()));
         }
         glUniform3fv(phongShadingShader->GetLocAmbientLight(), 1, glm::value_ptr(ambientLight));
-        
+
         // Render the mesh.
-//        mesh->Draw();
+        mesh->Draw();
 
         phongShadingShader->UnBind();
-		// -------------------------------------------------------
+
+        // -------------------------------------------------------
     }
-    
+
     // Visualize the light with fill color. ------------------------------------------------------
     // ----------------------------------------------------
     // You do not need to change the code.
@@ -185,13 +187,25 @@ void RenderSceneCB()
     PointLight* pointLight = pointLightObj.light;
     if (pointLight != nullptr) {
         glm::mat4x4 T = glm::translate(glm::mat4x4(1.0f), pointLight->GetPosition());
-        pointLightObj.worldMatrix = T;
+        pointLightObj.worldMatrix = T;  // 轉成世界座標
         glm::mat4x4 MVP = camera->GetProjMatrix() * camera->GetViewMatrix() * pointLightObj.worldMatrix;
         fillColorShader->Bind();
         glUniformMatrix4fv(fillColorShader->GetLocMVP(), 1, GL_FALSE, glm::value_ptr(MVP));
         glUniform3fv(fillColorShader->GetLocFillColor(), 1, glm::value_ptr(pointLightObj.visColor));
         // Render the point light.
         pointLight->Draw();
+        fillColorShader->UnBind();
+    }
+    SpotLight* spotLight = (SpotLight*)(spotLightObj.light);
+    if (spotLight != nullptr) {
+        glm::mat4x4 T = glm::translate(glm::mat4x4(1.0f), spotLight->GetPosition());
+        spotLightObj.worldMatrix = T;
+        glm::mat4x4 MVP = camera->GetProjMatrix() * camera->GetViewMatrix() * spotLightObj.worldMatrix;
+        fillColorShader->Bind();
+        glUniformMatrix4fv(fillColorShader->GetLocMVP(), 1, GL_FALSE, glm::value_ptr(MVP));
+        glUniform3fv(fillColorShader->GetLocFillColor(), 1, glm::value_ptr(spotLightObj.visColor));
+        // Render the spot light.
+        spotLight->Draw();
         fillColorShader->UnBind();
     }
     // -------------------------------------------------------------------------------------------
@@ -289,7 +303,7 @@ void SetupRenderState()
     // You do not need to change the code.
     // ----------------------------------------------------
     
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
 
     glm::vec4 clearColor = glm::vec4(0.44f, 0.57f, 0.75f, 1.00f);
@@ -309,10 +323,17 @@ void LoadObjects()
 	// -------------------------------------------------------
 
     mesh = new TriangleMesh();
-    mesh->LoadFromFile("/Users/liuliyu/Documents/Junior/Computer_graphic/HW2/ICG2022_HW2/ICG2022_HW2/models/ColorCube/ColorCube.obj", true);
-//    mesh->LoadFromFile("/Users/liuliyu/Documents/Junior/Computer_graphic/HW2/ICG2022_HW2/ICG2022_HW2/models/Bunny/Bunny.obj", true);
+    //mesh->LoadFromFile("models/ColorCube/ColorCube.obj", true);
+    //mesh->LoadFromFile("models/Bunny/Bunny.obj", true);
+    mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Koffing/Koffing.obj", true);
+    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Soccer/Soccer.obj", true);
+    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Rose/Rose.obj", true); 
+    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Forklift/Forklift.obj", true);
+    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Pillows/Pillows.obj", true);
+    mesh->CreateBuffers();
     mesh->ShowInfo();
     sceneObj.mesh = mesh;    
+
 }
 
 void CreateLights()
@@ -347,7 +368,6 @@ void CreateCamera()
     camera->UpdateProjection(fovy, aspectRatio, zNear, zFar);
 }
 
-// !!!!!!!.vs檔有問題
 void CreateShaderLib()
 {
     // ----------------------------------------------------
@@ -355,7 +375,7 @@ void CreateShaderLib()
     // ----------------------------------------------------
 
     fillColorShader = new FillColorShaderProg();
-    if (!fillColorShader->LoadFromFiles("/Users/liuliyu/Documents/Junior/Computer_graphic/HW2/ICG2022_HW2/ICG2022_HW2/shaders/fixed_color.vs", "shaders/fixed_color.fs"))
+    if (!fillColorShader->LoadFromFiles("shaders/fixed_color.vs", "shaders/fixed_color.fs"))
         exit(1);
 
     phongShadingShader = new PhongShadingDemoShaderProg();
@@ -372,7 +392,14 @@ int main(int argc, char** argv)
     glutInitWindowPosition(100, 100);
     glutCreateWindow("HW2: Lighting and Shading");
 
-   
+    // Initialize GLEW.
+    // Must be done after glut is initialized!
+    GLenum res = glewInit();
+    if (res != GLEW_OK) {
+        std::cerr << "GLEW initialization error: " 
+                  << glewGetErrorString(res) << std::endl;
+        return 1;
+    }
 
     // Initialization.
     SetupRenderState();
