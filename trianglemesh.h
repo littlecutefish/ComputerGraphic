@@ -31,7 +31,7 @@ struct SubMesh
 	}
 	PhongMaterial* material;
 	GLuint iboId;
-	std::vector<unsigned int> vertexIndices; //一條陣列，每三個點為一個三角形
+	std::vector<unsigned int> vertexIndices;
 };
 
 
@@ -49,11 +49,16 @@ public:
 	// Show model information.
 	void ShowInfo();
 
-    glm::vec3 GetKa(int i){ return subMeshes[i].material->GetKa();}
-    glm::vec3 GetKd(int i){ return subMeshes[i].material->GetKd();}
-    glm::vec3 GetKs(int i){ return subMeshes[i].material->GetKs();}
-    float GetNs(int i){ return subMeshes[i].material->GetNs();}
-    
+	glm::vec3 GetKa(int i) { return subMeshes[i].material->GetKa(); }
+	glm::vec3 GetKd(int i) { return subMeshes[i].material->GetKd(); }
+	glm::vec3 GetKs(int i) { return subMeshes[i].material->GetKs(); }
+	float GetNs(int i) { return subMeshes[i].material->GetNs(); }
+
+	void CreateBuffers();
+
+	void Draw();
+
+	
 	// -------------------------------------------------------
 	// Feel free to add your methods or data here.
 	// -------------------------------------------------------
@@ -61,6 +66,7 @@ public:
 	int GetNumVertices() const { return numVertices; }
 	int GetNumTriangles() const { return numTriangles; }
 	int GetNumSubMeshes() const { return (int)subMeshes.size(); }
+	int GetVerticesSize() const { return (int)vertices.size(); }
 
 	glm::vec3 GetObjCenter() const { return objCenter; }
 	glm::vec3 GetObjExtent() const { return objExtent; }
