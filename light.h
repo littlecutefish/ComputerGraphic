@@ -13,7 +13,7 @@ struct VertexP
 };
 
 // PointLight Declarations.
-class PointLight
+class PointLight  // 點光源
 {
 public:
 	// PointLight Public Methods.
@@ -74,26 +74,66 @@ public:
 		intensity = glm::vec3(1.0f, 1.0f, 1.0f);
 		// -------------------------------------------------------
 		// Add your initialization code here.
+		direction = glm::vec3(1.5f, 1.5f, 1.5f);
 		// -------------------------------------------------------
 		CreateVisGeometry();
 	}
+
+	// cutoffDeg = 聚光燈範圍 cos(角度) 內圈; totalWidthDeg 聚光燈範圍 cos(角度) 外圈
 	SpotLight(const glm::vec3 p, const glm::vec3 I, const glm::vec3 D, const float cutoffDeg, const float totalWidthDeg) {
 		position = p;
 		intensity = I;
 		// -------------------------------------------------------
 		// Add your initialization code here.
+		direction = glm::normalize(D);
+		cos_totalwidth = cos(totalWidthDeg);
+		cos_falloffstart = cos(cutoffDeg);
 		// -------------------------------------------------------
 		CreateVisGeometry();
 	}
 
 	// -------------------------------------------------------
 	// Add your methods or data here.
+	glm::vec3 GetDirection() const { return direction; }
+	glm::vec3 GetPosition()  const { return position; }
+	glm::vec3 GetIntensity() const { return intensity; }
+	float GetCosTotalwidth() const { return cos_totalwidth; }
+	float GetCosFalloffstart() const { return cos_falloffstart; }
+	
+	void Draw() {
+		glPointSize(16.0f);
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vboId);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexP), 0);
+		glDrawArrays(GL_POINTS, 0, 1);
+		glDisableVertexAttribArray(0);
+		glPointSize(1.0f);
+	}
+
+	void MoveLeft(const float moveSpeed) { position += moveSpeed * glm::vec3(-0.1f, 0.0f, 0.0f); }
+	void MoveRight(const float moveSpeed) { position += moveSpeed * glm::vec3(0.1f, 0.0f, 0.0f); }
+	void MoveUp(const float moveSpeed) { position += moveSpeed * glm::vec3(0.0f, 0.1f, 0.0f); }
+	void MoveDown(const float moveSpeed) { position += moveSpeed * glm::vec3(0.0f, -0.1f, 0.0f); }
+
 	// -------------------------------------------------------
 
 private:
 	// SpotLight Public Data.
 	// -------------------------------------------------------
 	// Add your methods or data here.
+	void CreateVisGeometry() {
+		VertexP lightVtx = glm::vec3(0, 0, 0);
+		const int numVertex = 1;
+		glGenBuffers(1, &vboId);
+		glBindBuffer(GL_ARRAY_BUFFER, vboId);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(VertexP) * numVertex, &lightVtx, GL_STATIC_DRAW);
+	}
+
+	glm::vec3 direction;
+	GLuint vboId;
+	glm::vec3 position;
+	glm::vec3 intensity;
+	float cos_totalwidth, cos_falloffstart;
 	// -------------------------------------------------------
 };
 
