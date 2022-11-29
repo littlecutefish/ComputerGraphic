@@ -5,7 +5,6 @@
 ShaderProg::ShaderProg()
 {
     // Create OpenGL shader program.
-    // 激活著色器
     shaderProgId = glCreateProgram();
     if (shaderProgId == 0) {
         std::cerr << "[ERROR] Failed to create shader program" << std::endl;
@@ -125,7 +124,7 @@ FillColorShaderProg::~FillColorShaderProg()
 void FillColorShaderProg::GetUniformVariableLocation()
 {
     ShaderProg::GetUniformVariableLocation();
-    locFillColor = glGetUniformLocation(shaderProgId, "fillColor");
+    locFillColor = glGetUniformLocation(shaderProgId, "fillColor");  // fillColor在fix_color.fs裡面
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -138,13 +137,18 @@ PhongShadingDemoShaderProg::PhongShadingDemoShaderProg()
     locKd = -1;
     locKs = -1;
     locNs = -1;
-    locAmbientLight = -1;
+    locAmbientLight = -1;  //ambient = 周圍
     locDirLightDir = -1;
 	locDirLightRadiance = -1;
 	locPointLightPos = -1;
 	locPointLightIntensity = -1;
     // -------------------------------------------------------
 	// Add your code for initializing the data of spot light.
+    locSpotLightPos = -1;
+    locSpotLightIntensity = -1;
+    locSpotLightDir = -1;
+    locSpotLightCutoffStartInDegree = -1;
+    locSpotLightTotalWidthInDegree = -1;
 	// -------------------------------------------------------
 }
 
@@ -154,6 +158,7 @@ PhongShadingDemoShaderProg::~PhongShadingDemoShaderProg()
 void PhongShadingDemoShaderProg::GetUniformVariableLocation()
 {
     ShaderProg::GetUniformVariableLocation();
+    // 訪問特定位址變量
     locM = glGetUniformLocation(shaderProgId, "worldMatrix");
     locNM = glGetUniformLocation(shaderProgId, "normalMatrix");
     locCameraPos = glGetUniformLocation(shaderProgId, "cameraPos");
@@ -168,5 +173,10 @@ void PhongShadingDemoShaderProg::GetUniformVariableLocation()
 	locPointLightIntensity = glGetUniformLocation(shaderProgId, "pointLightIntensity");
     // -------------------------------------------------------
 	// Add your code for getting the location of data of spot light.
+    locSpotLightPos = glGetUniformLocation(shaderProgId, "spotLightPos");
+    locSpotLightIntensity = glGetUniformLocation(shaderProgId, "spotLightIntensity");
+    locSpotLightDir = glGetUniformLocation(shaderProgId, "spotLightDir");
+    locSpotLightCutoffStartInDegree = glGetUniformLocation(shaderProgId, "spotLightCutoffStartInDegree");
+    locSpotLightTotalWidthInDegree = glGetUniformLocation(shaderProgId, "spotLightTotalWidthInDegree");
 	// -------------------------------------------------------
 }
