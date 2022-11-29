@@ -78,6 +78,11 @@ public:
 	GLint GetLocPointLightIntensity() const { return locPointLightIntensity; }
 	// -------------------------------------------------------
 	// Add your methods for spot light.
+	GLint GetLocSpotLightPos() const { return locSpotLightPos; }
+	GLint GetLocSpotLightIntensity() const { return locSpotLightIntensity; }
+	GLint GetLocSpotLightDir() const { return locSpotLightDir; }
+	float GetLocSpotLightCutoffStartInDegree() const { return locSpotLightCutoffStartInDegree; }
+	float GetLocSpotLightTotalWidthInDegree() const { return locSpotLightTotalWidthInDegree; }
 	// -------------------------------------------------------
 
 protected:
@@ -103,6 +108,11 @@ private:
 	GLint locPointLightIntensity;
 	// -------------------------------------------------------
 	// Add your data for spot light.
+	GLint locSpotLightPos;
+	GLint locSpotLightIntensity;
+	GLint locSpotLightDir;
+	float locSpotLightCutoffStartInDegree;
+	float locSpotLightTotalWidthInDegree;
 	// -------------------------------------------------------
 };
 
