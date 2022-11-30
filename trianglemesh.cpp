@@ -3,28 +3,28 @@
 // Constructor of a triangle mesh.
 TriangleMesh::TriangleMesh()
 {
-    numVertices = 0;
-    numTriangles = 0;
-    objCenter = glm::vec3(0.0f, 0.0f, 0.0f);
-    objExtent = glm::vec3(0.0f, 0.0f, 0.0f);
+	numVertices = 0;
+	numTriangles = 0;
+	objCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+	objExtent = glm::vec3(0.0f, 0.0f, 0.0f); 
 }
 
 // Destructor of a triangle mesh.
 TriangleMesh::~TriangleMesh()
 {
-    // -------------------------------------------------------
-    // Add your release code here.
-    // -------------------------------------------------------
+	// -------------------------------------------------------
+	// Add your release code here.
+	// -------------------------------------------------------
 }
 
 // Load the geometry and material data from an OBJ file.
 bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normalized)
-{
+{	
     // Parse the OBJ file.
 // ---------------------------------------------------------------------------
 // Add your implementation here (HW1 + read *.MTL).
 // ---------------------------------------------------------------------------
-    std::fstream file, mtl;
+    std::fstream file;
     std::string tmp;
     file.open(filePath, std::ios::in);
     if (!file)
@@ -38,7 +38,7 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
     std::vector<glm::vec3> nor2;
     std::vector<glm::vec2> tex2;
     std::vector<std::vector<int>> face2;
-    std::vector<int> face_temp;
+    std::vector < std::vector<std::vector<int>>> face3; //submesh數量來存
     std::vector<std::string> color2;
 
     glm::vec2 X_maxmin = glm::vec2(0.0f, 0.0f);
@@ -57,8 +57,7 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
     std::vector<float> ns2;
     std::vector<std::string> mtlName;
 
-    std::vector<unsigned int> vertexindex;
-    std::vector<std::vector<unsigned int>> vertexindex2;
+    std::vector<int> face(3), temp_p, temp_t, temp_n; // temp=按照face的順序存p t n
 
     std::vector<int> stop; // 區隔submesh
     if (file.is_open()) {
@@ -76,11 +75,13 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
                 for (int i = 0; i < mtlPath.length(); i++) {
                     if (mtlPath[i] == '.') tmp = mtlPath.substr(0, i);
                 }
+                std::cout << tmp << std::endl;
                 //mtlPath = "/Users/liuliyu/Documents/Junior/Computer_graphic/HW2/ICG2022_HW2/ICG2022_HW2/models/" + tmp + "/" + mtlPath;
                 mtlPath = "models/" + tmp + "/" + mtlPath;
                 int flag_mtl = 0; //表示未讀過mtl檔案
+                std::ifstream mtl;
                 if (!flag_mtl) {
-                    mtl.open(mtlPath, std::ios::in);
+                    mtl.open(mtlPath);
                     if (!mtl) {
                         std::cout << "Open mtl error!" << std::endl;
                     }
@@ -153,66 +154,76 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
                 use++;
                 ss >> color;
                 color2.push_back(color);
-                stop.push_back(face2.size()); // cube中存0.6.12....~30
-                std::cout << " hi ";
+                stop.push_back(face3.size()); // cube中存0.6.12....~30
             }
 
-            std::vector<int> face, temp_p; // temp=按照face的順序存p t n
             int f_temp;
-            while (ss >> f_temp) {
-                face.push_back(f_temp);
+            while (ss >> face[0]) {
+                //face.push_back(f_temp);
                 if (type == "f") {
                     f++;
                     char c;
+                    int k = 1;
                     for (int j = 0; j < 2; j++) {
-                        ss >> c >> f_temp;
-                        face.push_back(f_temp);
+                        ss >> c >> face[k];
+                        k++;
                     }
 
                     for (int j = 0; j < 3; j++) {
                         face[j] = abs(face[j]);
                     }
                     temp_p.push_back(face[0] - 1);
-                    
-                    //std::cout << face2.size()<< " ";
-                    if (temp_p.size() == 3) {
-//                        face_temp.push_back(temp_p);
-                        
-                    }
-                    if (temp_p.size() > 3) {
-                        for (int count = 2; count < temp_p.size(); count++) {
-                            face.push_back(temp_p[0]);
-                            face.push_back(temp_p[count - 1]);
-                            face.push_back(temp_p[count]);
-                            face2.push_back(face);
-                            std::cout << "hi" << std::endl;
-                            temp_p.clear();
-                            
-                        }
-//
-                    }
                     face2.push_back(face);
-                    std::cout << temp_p.size() << " " ;
                 }
             }
-//            if(temp_n.size() == 3){
-//
-//            }
-//            if(temp_n.size() > 3){
-//
-//            }
+            if (face2.size() == 3) {
+                face3.push_back(face2);
+            }
+            else if (face2.size() > 3) {
+                std::vector<std::vector<int>> face_temp;
+                std::vector<int> facefortemp(3);
+                for (int count = 1; count < face2.size() - 1; count++) {
+                    facefortemp[0] = face2[0][0];
+                    facefortemp[1] = face2[0][1];
+                    facefortemp[2] = face2[0][2];
+                    face_temp.push_back(facefortemp);
+                    facefortemp[0] = face2[count][0];
+                    facefortemp[1] = face2[count][1];
+                    facefortemp[2] = face2[count][2];
+                    face_temp.push_back(facefortemp);
+                    facefortemp[0] = face2[count + 1][0];
+                    facefortemp[1] = face2[count + 1][1];
+                    facefortemp[2] = face2[count + 1][2];
+                    face_temp.push_back(facefortemp);
+                    face3.push_back(face_temp);
+                    face_temp.clear();
+                }
+            }
+            face2.clear();
         }
-        
-        stop.push_back(face2.size());  //stop的數量是submesh+1
-        
+        stop.push_back(face3.size());  //stop的數量是submesh+1
+        std::cout << "face3 :" << face3.size() << std::endl;
+        for (int i = 0; i < face3.size(); i++) {
+            for (int j = 0; j < face3[i].size(); j++) {
+                //std::cout << face3[i][j][0] << " " << face3[i][j][1] << " " << face3[i][j][2] << " | ";
+                face[0] = face3[i][j][0];
+                face[1] = face3[i][j][1];
+                face[2] = face3[i][j][2];
+                face2.push_back(face);
+            }
+            //std::cout << face2.size() << std::endl;
+            
+        }
         std::cout << "submesh size:" << use + 1<< std::endl;
-        
+        //std::cout << "face2:" << face2.size() << std::endl;
         numVertices = p + 1;
 
         file.close();
     }
-     
-
+    for (int x = 0; x < stop.size(); x++) {
+        stop[x] *= 3;
+    }
+    std::cout << std::endl;
     VertexPTN vertexptn;
     std::vector<unsigned int> vertexindices;
     std::vector<unsigned int> vertexindices_temp;
@@ -246,22 +257,15 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
             count++;
             vertices.push_back(vertexptn);
         }
-        //std::cout << " v: " << vertices[i].position.x << " " << vertices[i].position.y << " " << vertices[i].position.z << std::endl;
         vertexindices.push_back(now_index);
         vertexindices_temp.push_back(now_index); //存全部的vertexindices
-       
-        if (i == (stop[vertexindices2.size() + 1] - 1)) { // 當i在submesh的斷點,pushback進去
 
+        //std::cout << "size:" << vertexindices2.size() << std::endl;
+        if (i == (stop[vertexindices2.size() + 1] - 1)) { // 當i在submesh的斷點,pushback進去
             vertexindices2.push_back(vertexindices);
             vertexindices.clear();
         }
-        //std::cout << "vertices.size= " << vertices.size()<< std::endl;
     }
-    /*std::cout << "size:" << vertexindices2.size() << std::endl;
-    */
-    /*for (int i = 0; i < vertexindices_temp.size(); i++) {
-        std::cout << vertexindices_temp[i] << " ";
-    }*/
 
     SubMesh submesh;
     PhongMaterial* phong[100];  //宣告一個指標p (動態配置記憶體) 之後要delete p
@@ -277,11 +281,8 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
             }
         }
         submesh.material = phong[i];
+        std::cout << vertexindices2.size();
         submesh.vertexIndices = vertexindices2[i];  //size = 6
-        //std::cout << vertexindices2[i].size() << std::endl;
-        /*std::cout << "i=" << i << " , " << vertexindex2[i][0] << " " << vertexindex2[i][1] << " " << vertexindex2[i][2];
-        std::cout << " " << vertexindex2[i][3] << " " << vertexindex2[i][4] << " " << vertexindex2[i][5] << std::endl;*/
-
         subMeshes.push_back(submesh);
     }
 
@@ -299,13 +300,17 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
         // -----------------------------------------------------------------------
         // Add your normalization code here (HW1).
         // -----------------------------------------------------------------------
-        float max = X_maxmin.x - X_maxmin.y;
-        if (max < Y_maxmin.x - Y_maxmin.y) max = Y_maxmin.x - Y_maxmin.y;
-        if (max < Z_maxmin.x - Z_maxmin.y) max = Z_maxmin.x - Z_maxmin.y;
+        float max = X_maxmin.x - X_maxmin.y; //x長度
+        if (max < Y_maxmin.x - Y_maxmin.y) max = Y_maxmin.x - Y_maxmin.y; //y長度
+        if (max < Z_maxmin.x - Z_maxmin.y) max = Z_maxmin.x - Z_maxmin.y; //z長度
 
         objExtent.x = (X_maxmin.x - X_maxmin.y) / max;
         objExtent.y = (Y_maxmin.x - Y_maxmin.y) / max;
         objExtent.z = (Z_maxmin.x - Z_maxmin.y) / max;
+
+        objCenter.x = (X_maxmin.x + X_maxmin.y) / 2;
+        objCenter.y = (Y_maxmin.x + Y_maxmin.y) / 2;
+        objCenter.z = (Z_maxmin.x + Z_maxmin.y) / 2;
 
         for (int i = 0; i < vertices.size(); i++) {
             vertices[i].position.x = (vertices[i].position.x - objCenter.x) / max;
@@ -320,16 +325,16 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
 // Show model information.
 void TriangleMesh::ShowInfo()
 {
-    std::cout << "# Vertices: " << numVertices << std::endl;
-    std::cout << "# Triangles: " << numTriangles << std::endl;
-    std::cout << "Total " << subMeshes.size() << " subMeshes loaded" << std::endl;
-    for (unsigned int i = 0; i < subMeshes.size(); ++i) {
-        const SubMesh& g = subMeshes[i];
-        std::cout << "SubMesh " << i << " with material: " << g.material->GetName() << std::endl;
-        std::cout << "Num. triangles in the subMesh: " << g.vertexIndices.size() / 3 << std::endl;
-    }
-    std::cout << "Model Center: " << objCenter.x << ", " << objCenter.y << ", " << objCenter.z << std::endl;
-    std::cout << "Model Extent: " << objExtent.x << " x " << objExtent.y << " x " << objExtent.z << std::endl;
+	std::cout << "# Vertices: " << numVertices << std::endl;
+	std::cout << "# Triangles: " << numTriangles << std::endl;
+	std::cout << "Total " << subMeshes.size() << " subMeshes loaded" << std::endl;
+	for (unsigned int i = 0; i < subMeshes.size(); ++i) {
+		const SubMesh& g = subMeshes[i];
+		std::cout << "SubMesh " << i << " with material: " << g.material->GetName() << std::endl;
+		std::cout << "Num. triangles in the subMesh: " << g.vertexIndices.size() / 3 << std::endl;
+	}
+	std::cout << "Model Center: " << objCenter.x << ", " << objCenter.y << ", " << objCenter.z << std::endl;
+	std::cout << "Model Extent: " << objExtent.x << " x " << objExtent.y << " x " << objExtent.z << std::endl;
     
     /*for (int i = 0; i < subMeshes.size(); i++) {
         for (int j = 0; j < subMeshes[i].vertexIndices.size(); j++) {
@@ -342,7 +347,7 @@ void TriangleMesh::ShowInfo()
 
 void TriangleMesh::CreateBuffers()
 {
-    // Generate the vertex buffer
+    // Generate the vertex buffer 
     glGenBuffers(1, &vboId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPTN) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
