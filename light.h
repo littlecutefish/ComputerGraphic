@@ -75,6 +75,8 @@ public:
 		// -------------------------------------------------------
 		// Add your initialization code here.
 		direction = glm::vec3(1.5f, 1.5f, 1.5f);
+		cos_totalwidth = 0.0f;
+		cos_falloffstart = 0.0f;
 		// -------------------------------------------------------
 		CreateVisGeometry();
 	}
@@ -86,8 +88,9 @@ public:
 		// -------------------------------------------------------
 		// Add your initialization code here.
 		direction = glm::normalize(D);
-		cos_totalwidth = cos(totalWidthDeg);
-		cos_falloffstart = cos(cutoffDeg);
+		cos_totalwidth = glm::cos(glm::radians(totalWidthDeg));
+		cos_falloffstart = glm::cos(glm::radians(cutoffDeg));
+		//std::cout << cos_totalwidth << " " << cos_falloffstart << std::endl;
 		// -------------------------------------------------------
 		CreateVisGeometry();
 	}
@@ -136,8 +139,6 @@ private:
 	float cos_totalwidth, cos_falloffstart;
 	// -------------------------------------------------------
 };
-
-
 
 // DirectionalLight Declarations.
 class DirectionalLight
