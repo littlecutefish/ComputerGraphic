@@ -81,8 +81,8 @@ public:
 	GLint GetLocSpotLightPos() const { return locSpotLightPos; }
 	GLint GetLocSpotLightIntensity() const { return locSpotLightIntensity; }
 	GLint GetLocSpotLightDir() const { return locSpotLightDir; }
-	float GetLocSpotLightCutoffStartInDegree() const { return locSpotLightCutoffStartInDegree; }
-	float GetLocSpotLightTotalWidthInDegree() const { return locSpotLightTotalWidthInDegree; }
+	GLint GetLocSpotLightCutoffStartInDegree() const { return locSpotLightCutoffStartInDegree; }
+	GLint GetLocSpotLightTotalWidthInDegree() const { return locSpotLightTotalWidthInDegree; }
 	// -------------------------------------------------------
 
 protected:
@@ -111,8 +111,8 @@ private:
 	GLint locSpotLightPos;
 	GLint locSpotLightIntensity;
 	GLint locSpotLightDir;
-	float locSpotLightCutoffStartInDegree;
-	float locSpotLightTotalWidthInDegree;
+	GLint locSpotLightCutoffStartInDegree;
+	GLint locSpotLightTotalWidthInDegree;
 	// -------------------------------------------------------
 };
 
