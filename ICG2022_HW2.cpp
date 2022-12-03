@@ -40,6 +40,8 @@ FillColorShaderProg* fillColorShader = nullptr;
 PhongShadingDemoShaderProg* phongShadingShader = nullptr;
 // UI.
 const float lightMoveSpeed = 0.2f;
+std::string Path = "models/Soccer/Soccer.obj";
+std::string NewPath = "models/Soccer/Soccer.obj";
 
 // SceneObject.
 struct SceneObject
@@ -76,9 +78,14 @@ void ReshapeCB(int, int);
 void ProcessSpecialKeysCB(int, int, int);
 void ProcessKeysCB(unsigned char, int, int);
 void SetupRenderState();
-void LoadObjects(const std::string);
+void LoadObjects();
+void CreateLights();
 void CreateCamera();
 void CreateShaderLib();
+void createMenu(void);
+void mainMenu(int index);
+void subMenu1(int index);
+void subMenu2(int index);
 
 
 void ReleaseResources()
@@ -126,11 +133,19 @@ void RenderSceneCB()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+    if (Path != NewPath) {
+        LoadObjects();
+        CreateLights();
+        CreateCamera();
+        CreateShaderLib();
+        Path = NewPath;
+    }
+
     // Render a triangle mesh with Phong shading. ------------------------------------------------
     TriangleMesh* mesh = sceneObj.mesh;
     if (sceneObj.mesh != nullptr) {
         // Update transform.
-         //curRotationY += rotStep;
+        //curRotationY += rotStep;
         glm::mat4x4 S = glm::scale(glm::mat4x4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
         glm::mat4x4 R = glm::rotate(glm::mat4x4(1.0f), glm::radians(curRotationY), glm::vec3(0, 1, 0));
         sceneObj.worldMatrix = S * R;
@@ -150,6 +165,7 @@ void RenderSceneCB()
         glUniformMatrix4fv(phongShadingShader->GetLocM(), 1, GL_FALSE, glm::value_ptr(sceneObj.worldMatrix));
         glUniformMatrix4fv(phongShadingShader->GetLocNM(), 1, GL_FALSE, glm::value_ptr(normalMatrix));
         glUniformMatrix4fv(phongShadingShader->GetLocMVP(), 1, GL_FALSE, glm::value_ptr(MVP));
+        glUniform3fv(phongShadingShader->GetLocCameraPos(), 1, glm::value_ptr(camera->GetCameraPos()));
 
 
         // Material properties.
@@ -159,6 +175,16 @@ void RenderSceneCB()
             glUniform3fv(phongShadingShader->GetLocKd(), 1, glm::value_ptr(sceneObj.mesh->GetKd(i)));
             glUniform3fv(phongShadingShader->GetLocKs(), 1, glm::value_ptr(sceneObj.mesh->GetKs(i)));
             glUniform1f(phongShadingShader->GetLocNs(), sceneObj.mesh->GetNs(i));
+            //mesh->Draw();
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, sceneObj.mesh->GetVboID() );
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPTN), 0);  //stride = 32
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPTN), (const GLvoid*)12);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sceneObj.mesh->GetIboID(i));
+            glDrawElements(GL_TRIANGLES, sceneObj.mesh->GetVertexIndicesSize(i), GL_UNSIGNED_INT, 0);
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
         }
 
         // Light data.
@@ -170,10 +196,16 @@ void RenderSceneCB()
             glUniform3fv(phongShadingShader->GetLocPointLightPos(), 1, glm::value_ptr(pointLight->GetPosition()));
             glUniform3fv(phongShadingShader->GetLocPointLightIntensity(), 1, glm::value_ptr(pointLight->GetIntensity()));
         }
+        if (spotLight != nullptr) {
+            glUniform3fv(phongShadingShader->GetLocSpotLightPos(), 1, glm::value_ptr(spotLight->GetPosition()));
+            glUniform3fv(phongShadingShader->GetLocSpotLightIntensity(), 1, glm::value_ptr(spotLight->GetIntensity()));
+            glUniform3fv(phongShadingShader->GetLocSpotLightDir(), 1, glm::value_ptr(spotLight->GetDirection()));
+            glUniform1f(phongShadingShader->GetLocSpotLightCutoffStartInDegree(), spotLight->GetCosFalloffstart());
+            glUniform1f(phongShadingShader->GetLocSpotLightTotalWidthInDegree(), spotLight->GetCosTotalwidth());
+        }
         glUniform3fv(phongShadingShader->GetLocAmbientLight(), 1, glm::value_ptr(ambientLight));
 
         // Render the mesh.
-        mesh->Draw();
 
         phongShadingShader->UnBind();
 
@@ -323,17 +355,11 @@ void LoadObjects()
 	// -------------------------------------------------------
 
     mesh = new TriangleMesh();
-    //mesh->LoadFromFile("models/ColorCube/ColorCube.obj", true);
-    //mesh->LoadFromFile("models/Bunny/Bunny.obj", true);
-    mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Koffing/Koffing.obj", true);
-    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Soccer/Soccer.obj", true);
-    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Rose/Rose.obj", true); 
-    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Forklift/Forklift.obj", true);
-    //mesh->LoadFromFile("../../ICG2022_HW2_Test_Models/Pillows/Pillows.obj", true);
+    mesh->LoadFromFile(NewPath, true);
+    
     mesh->CreateBuffers();
     mesh->ShowInfo();
     sceneObj.mesh = mesh;    
-
 }
 
 void CreateLights()
@@ -379,8 +405,72 @@ void CreateShaderLib()
         exit(1);
 
     phongShadingShader = new PhongShadingDemoShaderProg();
-    if (!phongShadingShader->LoadFromFiles("shaders/phong_shading_demo.vs", "shaders/phong_shading_demo.fs"))
+    if (!phongShadingShader->LoadFromFiles("shaders/phong_shading_demo.vs", "shaders/phong_shading_demo2.fs"))
         exit(1);
+}
+
+void menu(int index) {}
+
+void mainMenu(int index)
+{
+    switch (index)
+    {
+    case 1:
+        break;
+    case 2:
+        break;
+    }
+}
+
+//定義按鈕功能
+void subMenu1(int index)
+{
+    switch (index)
+    {
+    case 1:
+        NewPath = "models/ColorCube/ColorCube.obj";
+        break;
+    case 2:
+        NewPath = "models/Bunny/Bunny.obj";
+        break;
+    case 3:
+        NewPath = "models/Koffing/Koffing.obj";
+        break;
+    case 4:
+        NewPath = "models/Soccer/Soccer.obj";
+        break;
+    case 5:
+        NewPath = "models/Rose/Rose.obj";
+        break;
+    case 6:
+        NewPath = "models/Forklift/Forklift.obj";
+        break;
+    case 7:
+        NewPath = "models/Pillows/Pillows.obj";
+        break;
+    }
+
+}
+
+void createMenu()
+{
+    ///setting all the submenus
+    //create sub-menu 1
+    int submenu1 = glutCreateMenu(subMenu1);
+    glutAddMenuEntry("Cube.obj", 1);//add option of sub manu 1
+    glutAddMenuEntry("Bunny.obj", 2);
+    glutAddMenuEntry("Koffing.obj", 3);
+    glutAddMenuEntry("Soccer.obj", 4);
+    glutAddMenuEntry("Rose.obj", 5);
+    glutAddMenuEntry("Forklift.obj", 6);
+    glutAddMenuEntry("Pillows.obj", 7);
+
+    ///create main menu
+    glutCreateMenu(mainMenu);
+    glutAddSubMenu("Choose OBJ File", submenu1);//add submenu to main menu
+
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+
 }
 
 int main(int argc, char** argv)
@@ -415,6 +505,9 @@ int main(int argc, char** argv)
     glutSpecialFunc(ProcessSpecialKeysCB);
     glutKeyboardFunc(ProcessKeysCB);
 
+    //callback event
+    createMenu();
+    
     // Start rendering loop.
     glutMainLoop();
 
