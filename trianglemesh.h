@@ -1,82 +1,95 @@
 #ifndef TRIANGLEMESH_H
 #define TRIANGLEMESH_H
 
-// OpenGL and FreeGlut headers.
-#include <GLUT/GLUT.h>
-
-// GLM.
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-// C++ STL headers.
-#include <iostream>
-#include <vector>
-
-
+#include "headers.h"
+#include "material.h"
 
 // VertexPTN Declarations.
 struct VertexPTN
 {
-    VertexPTN() {
-        position = glm::vec3(0.0f, 0.0f, 0.0f);
-        normal = glm::vec3(0.0f, 1.0f, 0.0f);
-        texcoord = glm::vec2(0.0f, 0.0f);
-    }
-    VertexPTN(glm::vec3 p, glm::vec3 n, glm::vec2 uv) {
-        position = p;  // 3��
-        normal = n;       // 3��
-        texcoord = uv; // 2��
-    }
-    glm::vec3 position;        // Vertex position.
-    glm::vec3 normal;        // Vertex normal.
-    glm::vec2 texcoord;        // Vertex texture coordinate (will be used later HWs)
+	VertexPTN() {
+		position = glm::vec3(0.0f, 0.0f, 0.0f);
+		normal = glm::vec3(0.0f, 1.0f, 0.0f);
+		texcoord = glm::vec2(0.0f, 0.0f);
+	}
+	VertexPTN(glm::vec3 p, glm::vec3 n, glm::vec2 uv) {
+		position = p;
+		normal = n;
+		texcoord = uv;
+	}
+	glm::vec3 position;
+	glm::vec3 normal;
+	glm::vec2 texcoord;
 };
+
+// SubMesh Declarations.
+struct SubMesh
+{
+	SubMesh() {
+		material = nullptr;
+		iboId = 0;
+	}
+	PhongMaterial* material;
+	GLuint iboId;
+	std::vector<unsigned int> vertexIndices;
+};
+
 
 // TriangleMesh Declarations.
 class TriangleMesh
 {
 public:
-    // TriangleMesh Public Methods.
-    TriangleMesh();
-    ~TriangleMesh();
-    
-    // Load the model from an *.OBJ file.
-    bool LoadFromFile(const std::string& filePath, const bool normalized = true);
-    
-    // Apply transform on CPU.
-    void ApplyTransformCPU(const glm::mat4x4& mvpMatrix);
+	// TriangleMesh Public Methods.
+	TriangleMesh();
+	~TriangleMesh();
+	
+	// Load the model from an *.OBJ file.
+	bool LoadFromFile(const std::string& filePath, const bool normalized = true);
+	
+	// Show model information.
+	void ShowInfo();
 
-    // Show model information.
-    void ShowInfo();
-    
-    // ---------------------------------------------------------------------------
-    // Add new methods if needed.
-    int GetNumVertices(){
-        return numVertices;
-    }
-    
-    void CreateVertexBuffers(GLuint &vbo);
-    
-    void CreateIndexBuffers(GLuint &ibo);
-    
-    void RenderOBJ(GLuint &vbo, GLuint &ibo);
-    
+	// -------------------------------------------------------
+	// Feel free to add your methods or data here.
+	glm::vec3 GetKa(int i) { return subMeshes[i].material->GetKa(); }
+	glm::vec3 GetKd(int i) { return subMeshes[i].material->GetKd(); }
+	glm::vec3 GetKs(int i) { return subMeshes[i].material->GetKs(); }
+	float GetNs(int i) { return subMeshes[i].material->GetNs(); }
+	ImageTexture* GetMapKd(int i) { return subMeshes[i].material->GetMapKd(); }
+
+	void CreateBuffers();
+
+	GLuint GetVboID() { return vboId; }
+	GLuint GetIboID(int i) { return subMeshes[i].iboId; }
+	int GetVertexIndicesSize(int i) { return subMeshes[i].vertexIndices.size(); }
+	// -------------------------------------------------------
+
+	int GetNumVertices() const { return numVertices; }
+	int GetNumTriangles() const { return numTriangles; }
+	int GetNumSubMeshes() const { return (int)subMeshes.size(); }
+	//int GetMapKdSizes(int i) const { subMeshes[i] }
+	glm::vec3 GetObjCenter() const { return objCenter; }
+	glm::vec3 GetObjExtent() const { return objExtent; }
+
 private:
-    // TriangleMesh Private Methods.
-    // ---------------------------------------------------------------------------
-    // Add new methods if needed.
-    // ---------------------------------------------------------------------------
+	// -------------------------------------------------------
+	// Feel free to add your methods or data here.
+	// -------------------------------------------------------
 
-    // TriangleMesh Private Data.
-    std::vector<VertexPTN> vertices;
-    std::vector<unsigned int> vertexIndices;
-    int numVertices;
-    int numTriangles;
-    glm::vec3 objCenter;
-    glm::vec3 objExtent;
-    // ---------------------------------------------------------------------------
-    // Add new data if needed.
-    // ---------------------------------------------------------------------------
+	// TriangleMesh Private Data.
+	GLuint vboId;
+	
+	std::vector<VertexPTN> vertices;
+	// For supporting multiple materials per object, move to SubMesh.
+	// GLuint iboId;
+	// std::vector<unsigned int> vertexIndices;
+	std::vector<SubMesh> subMeshes;
+
+	int numVertices;
+	int numTriangles;
+	glm::vec3 objCenter;
+	glm::vec3 objExtent;
 };
+
 
 #endif
