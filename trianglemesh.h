@@ -49,27 +49,25 @@ public:
 	// Show model information.
 	void ShowInfo();
 
+	// -------------------------------------------------------
+	// Feel free to add your methods or data here.
 	glm::vec3 GetKa(int i) { return subMeshes[i].material->GetKa(); }
 	glm::vec3 GetKd(int i) { return subMeshes[i].material->GetKd(); }
 	glm::vec3 GetKs(int i) { return subMeshes[i].material->GetKs(); }
 	float GetNs(int i) { return subMeshes[i].material->GetNs(); }
+	ImageTexture* GetMapKd(int i) { return subMeshes[i].material->GetMapKd(); }
 
 	void CreateBuffers();
-
-	void Draw();
 
 	GLuint GetVboID() { return vboId; }
 	GLuint GetIboID(int i) { return subMeshes[i].iboId; }
 	int GetVertexIndicesSize(int i) { return subMeshes[i].vertexIndices.size(); }
 	// -------------------------------------------------------
-	// Feel free to add your methods or data here.
-	// -------------------------------------------------------
 
 	int GetNumVertices() const { return numVertices; }
 	int GetNumTriangles() const { return numTriangles; }
 	int GetNumSubMeshes() const { return (int)subMeshes.size(); }
-	int GetVerticesSize() const { return (int)vertices.size(); }
-
+	//int GetMapKdSizes(int i) const { subMeshes[i] }
 	glm::vec3 GetObjCenter() const { return objCenter; }
 	glm::vec3 GetObjExtent() const { return objExtent; }
 

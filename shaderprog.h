@@ -84,6 +84,11 @@ public:
 	GLint GetLocSpotLightCutoffStartInDegree() const { return locSpotLightCutoffStartInDegree; }
 	GLint GetLocSpotLightTotalWidthInDegree() const { return locSpotLightTotalWidthInDegree; }
 	// -------------------------------------------------------
+	// -------------------------------------------------------
+	// Add your methods for supporting textures.
+	GLint GetLocMapKd() const { return locMapKd; }
+	GLint GetLocColor() const { return locColor; }
+	// -------------------------------------------------------
 
 protected:
 	// PhongShadingDemoShaderProg Protected Methods.
@@ -114,7 +119,33 @@ private:
 	GLint locSpotLightCutoffStartInDegree;
 	GLint locSpotLightTotalWidthInDegree;
 	// -------------------------------------------------------
+	// Texture data.
+	// -------------------------------------------------------
+	// Add your data for supporting textures.
+	GLint locMapKd;
+	GLint locColor;
+	// -------------------------------------------------------
 };
 
+// ------------------------------------------------------------------------------------------------
+
+// SkyboxShaderProg Declarations.
+class SkyboxShaderProg : public ShaderProg
+{
+public:
+	// SkyboxShaderProg Public Methods.
+	SkyboxShaderProg();
+	~SkyboxShaderProg();
+
+	GLint GetLocMapKd() const { return locMapKd; }
+
+protected:
+	// PhongShadingDemoShaderProg Protected Methods.
+	void GetUniformVariableLocation();
+
+private:
+	// SkyboxShaderProg Public Data.
+	GLint locMapKd;
+};
 
 #endif

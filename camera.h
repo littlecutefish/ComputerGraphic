@@ -10,9 +10,9 @@ public:
 	Camera(const float aspectRatio);
 	~Camera();
 
-	glm::vec3 GetCameraPos() const { return position; }
-	glm::mat4x4 GetViewMatrix() const { return viewMatrix; }
-	glm::mat4x4 GetProjMatrix() const { return projMatrix; }
+	glm::vec3& GetCameraPos() { return position; }
+	glm::mat4x4& GetViewMatrix() { return viewMatrix; }
+	glm::mat4x4& GetProjMatrix() { return projMatrix; }
 
 	void UpdateView(const glm::vec3 newPos, const glm::vec3 newTarget, const glm::vec3 up);
 	void UpdateProjection(const float fovyInDegree, const float aspectRatio, const float zNear, const float zFar);

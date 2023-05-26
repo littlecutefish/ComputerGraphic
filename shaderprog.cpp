@@ -124,10 +124,11 @@ FillColorShaderProg::~FillColorShaderProg()
 void FillColorShaderProg::GetUniformVariableLocation()
 {
     ShaderProg::GetUniformVariableLocation();
-    locFillColor = glGetUniformLocation(shaderProgId, "fillColor");  // fillColor在fix_color.fs裡面
+    locFillColor = glGetUniformLocation(shaderProgId, "fillColor");
 }
 
 // ------------------------------------------------------------------------------------------------
+
 PhongShadingDemoShaderProg::PhongShadingDemoShaderProg()
 {
     locM = -1;
@@ -137,7 +138,7 @@ PhongShadingDemoShaderProg::PhongShadingDemoShaderProg()
     locKd = -1;
     locKs = -1;
     locNs = -1;
-    locAmbientLight = -1;  //ambient = 周圍
+    locAmbientLight = -1;
     locDirLightDir = -1;
 	locDirLightRadiance = -1;
 	locPointLightPos = -1;
@@ -150,6 +151,11 @@ PhongShadingDemoShaderProg::PhongShadingDemoShaderProg()
     locSpotLightCutoffStartInDegree = -1;
     locSpotLightTotalWidthInDegree = -1;
 	// -------------------------------------------------------
+    // -------------------------------------------------------
+	// Add your code for initializing the data of textures.
+    locMapKd = -1;
+    locColor = -1;
+	// -------------------------------------------------------
 }
 
 PhongShadingDemoShaderProg::~PhongShadingDemoShaderProg()
@@ -158,7 +164,6 @@ PhongShadingDemoShaderProg::~PhongShadingDemoShaderProg()
 void PhongShadingDemoShaderProg::GetUniformVariableLocation()
 {
     ShaderProg::GetUniformVariableLocation();
-    // 訪問特定位址變量
     locM = glGetUniformLocation(shaderProgId, "worldMatrix");
     locNM = glGetUniformLocation(shaderProgId, "normalMatrix");
     locCameraPos = glGetUniformLocation(shaderProgId, "cameraPos");
@@ -179,4 +184,26 @@ void PhongShadingDemoShaderProg::GetUniformVariableLocation()
     locSpotLightCutoffStartInDegree = glGetUniformLocation(shaderProgId, "spotLightCutoffStartInDegree");
     locSpotLightTotalWidthInDegree = glGetUniformLocation(shaderProgId, "spotLightTotalWidthInDegree");
 	// -------------------------------------------------------
+    // -------------------------------------------------------
+	// Add your code for getting the location of texture variable.
+    locMapKd = glGetUniformLocation(shaderProgId, "mapKd");
+    locColor = glGetUniformLocation(shaderProgId, "color");
+	// -------------------------------------------------------
+
+}
+
+// ------------------------------------------------------------------------------------------------
+
+SkyboxShaderProg::SkyboxShaderProg()
+{
+    locMapKd = -1;
+}
+
+SkyboxShaderProg::~SkyboxShaderProg()
+{}
+
+void SkyboxShaderProg::GetUniformVariableLocation()
+{
+    ShaderProg::GetUniformVariableLocation();
+    locMapKd = glGetUniformLocation(shaderProgId, "mapKd");
 }

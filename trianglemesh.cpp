@@ -3,10 +3,13 @@
 // Constructor of a triangle mesh.
 TriangleMesh::TriangleMesh()
 {
-	numVertices = 0;
-	numTriangles = 0;
-	objCenter = glm::vec3(0.0f, 0.0f, 0.0f);
-	objExtent = glm::vec3(0.0f, 0.0f, 0.0f); 
+	// -------------------------------------------------------
+	// Add your initialization code here.
+    numVertices = 0;
+    numTriangles = 0;
+    objCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+    objExtent = glm::vec3(0.0f, 0.0f, 0.0f);
+	// -------------------------------------------------------
 }
 
 // Destructor of a triangle mesh.
@@ -16,13 +19,12 @@ TriangleMesh::~TriangleMesh()
 	// Add your release code here.
     vertices.clear();
     subMeshes.clear();
-
 	// -------------------------------------------------------
 }
 
 // Load the geometry and material data from an OBJ file.
 bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normalized)
-{	
+{
     // Parse the OBJ file.
 // ---------------------------------------------------------------------------
 // Add your implementation here (HW1 + read *.MTL).
@@ -59,13 +61,14 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
     std::vector<glm::vec3> ks2;
     std::vector<float> ns2;
     std::vector<std::string> mtlName;
+    ImageTexture* mapkd;
+    std::vector<ImageTexture*> mapkd2;
 
     std::vector<int> face(3), temp_p, temp_t, temp_n; // temp=按照face的順序存p t n
 
     std::vector<int> stop; // 區隔submesh
     if (file.is_open()) {
         std::string line, mtlPath;
-
 
         while (getline(file, line)) {
             std::stringstream ss(line);
@@ -78,47 +81,49 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
                 for (int i = 0; i < mtlPath.length(); i++) {
                     if (mtlPath[i] == '.') tmp = mtlPath.substr(0, i);
                 }
-                std::cout << tmp << std::endl;
-                //mtlPath = "/Users/liuliyu/Documents/Junior/Computer_graphic/HW2/ICG2022_HW2/ICG2022_HW2/models/" + tmp + "/" + mtlPath;
                 mtlPath = "models/" + tmp + "/" + mtlPath;
-                int flag_mtl = 0; //表示未讀過mtl檔案
                 std::ifstream mtl;
-                if (!flag_mtl) {
-                    mtl.open(mtlPath);
-                    if (!mtl) {
-                        std::cout << "Open mtl error!" << std::endl;
-                    }
-
-                    flag_mtl = 1; //表示已經讀過mtl檔案了
-
-                    while (getline(mtl, line)) {
-                        std::stringstream stemp(line);
-                        stemp >> mtl_temp;
-                        if (mtl_temp == "newmtl") { // 存顏色
-                            stemp >> color;
-                            mtlName.push_back(color);
-                        }
-                        else if (mtl_temp == "Ns") {
-                            stemp >> ns;
-                            ns2.push_back(ns);
-                        }
-                        else if (mtl_temp == "Ka") {
-                            stemp >> ka[0] >> ka[1] >> ka[2];
-                            ka2.push_back(ka);
-                        }
-                        else if (mtl_temp == "Kd") {
-                            stemp >> kd[0] >> kd[1] >> kd[2];
-                            kd2.push_back(kd);
-                        }
-                        else if (mtl_temp == "Ks") {
-                            stemp >> ks[0] >> ks[1] >> ks[2];
-                            ks2.push_back(ks);
-                            mtl_temp = " "; //還原初始化
-                        }
-                    }
-                    mtl.close();
+                mtl.open(mtlPath);
+                if (!mtl) {
+                    std::cout << "Open mtl error!" << std::endl;
                 }
+
+                while (getline(mtl, line)) {
+                    std::stringstream stemp(line);
+                    stemp >> mtl_temp;
+                    if (mtl_temp == "newmtl") { // 存顏色
+                        stemp >> color;
+                        mtlName.push_back(color);
+                    }
+                    else if (mtl_temp == "Ns") {
+                        stemp >> ns;
+                        ns2.push_back(ns);
+                    }
+                    else if (mtl_temp == "Ka") {
+                        stemp >> ka[0] >> ka[1] >> ka[2];
+                        ka2.push_back(ka);
+                    }
+                    else if (mtl_temp == "Kd") {
+                        stemp >> kd[0] >> kd[1] >> kd[2];
+                        kd2.push_back(kd);
+                    }
+                    else if (mtl_temp == "Ks") {
+                        stemp >> ks[0] >> ks[1] >> ks[2];
+                        ks2.push_back(ks);
+                    }
+                    else if (mtl_temp == "map_Kd") {
+                        std::string imagename;
+                        stemp >> imagename;
+                        std::cout << imagename << std::endl;
+                        mapkd = new ImageTexture("models/"+ tmp + "/" + imagename);
+                        mapkd2.push_back(mapkd);
+                    }
+                    mtl_temp = "";
+                }
+                mtl.close();
             }
+
+            
 
             // position
             if (type == "v") {
@@ -210,12 +215,17 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
                 face[1] = face3[i][j][1];
                 face[2] = face3[i][j][2];
                 face2.push_back(face);
-            }   
+            }
         }
         numVertices = p + 1;
 
         file.close();
     }
+
+    for (int i = 0; i < mapkd2.size(); i++) {
+        std::cout << mapkd2[i]->GetPath() << std::endl;
+    }
+
     for (int x = 0; x < stop.size(); x++) {
         stop[x] *= 3;
     }
@@ -224,7 +234,7 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
     std::vector<unsigned int> vertexindices_temp;
     std::vector < std::vector<unsigned int>> vertexindices2;
     int count = 0, now_index; // 計算總vertexindeices數量
-    
+
     for (int i = 0; i < face2.size(); i++) {
         int add = 1;
         for (int j = 0; j < vertices.size(); j++) { // 判斷是否有一樣的ptn在vertices裡面,若沒有 add=1
@@ -241,10 +251,10 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
             vertexptn.position.x = pos2[face2[i][0] - 1][0];
             vertexptn.position.y = pos2[face2[i][0] - 1][1];
             vertexptn.position.z = pos2[face2[i][0] - 1][2];
-                
+
             vertexptn.texcoord.x = tex2[face2[i][1] - 1][0];
             vertexptn.texcoord.y = tex2[face2[i][1] - 1][1];
-                
+
             vertexptn.normal.x = nor2[face2[i][2] - 1][0];
             vertexptn.normal.y = nor2[face2[i][2] - 1][1];
             vertexptn.normal.z = nor2[face2[i][2] - 1][2];
@@ -262,7 +272,7 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
 
     SubMesh submesh;
     PhongMaterial* phong[100];  //宣告一個指標p (動態配置記憶體) 之後要delete p
-    for (int i = 0; i < use + 1; i++) {  // use +1 = 6
+    for (int i = 0; i < use + 1; i++) {  
         phong[i] = new PhongMaterial();
         for (int j = 0; j < mtlName.size(); j++) {
             if (color2[i] == mtlName[j]) {
@@ -271,10 +281,16 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
                 phong[i]->SetKd(kd2[j]);
                 phong[i]->SetKa(ka2[j]);
                 phong[i]->SetName(mtlName[j]);
+                if (mapkd2.size() <= j) {
+                    phong[i]->SetMapKd(nullptr);
+                }
+                else {
+                    phong[i]->SetMapKd(mapkd2[j]);
+                }
             }
         }
         submesh.material = phong[i];
-        submesh.vertexIndices = vertexindices2[i];  //size = 6
+        submesh.vertexIndices = vertexindices2[i];  
         subMeshes.push_back(submesh);
     }
 
@@ -284,7 +300,7 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
     objCenter.z /= p;
 
     for (int i = 0; i < subMeshes.size(); i++) {
-        numTriangles += (subMeshes[i].vertexIndices.size()/3);
+        numTriangles += (subMeshes[i].vertexIndices.size() / 3);
     }
 
     // Normalize the geometry data.
@@ -310,6 +326,7 @@ bool TriangleMesh::LoadFromFile(const std::string& filePath, const bool normaliz
             vertices[i].position.z = (vertices[i].position.z - objCenter.z) / max;
         }
     }
+    delete phong[100];
     return true;
 }
 
@@ -340,20 +357,5 @@ void TriangleMesh::CreateBuffers()
         glGenBuffers(1, &subMeshes[i].iboId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, subMeshes[i].iboId);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * subMeshes[i].vertexIndices.size(), &(subMeshes[i].vertexIndices[0]), GL_STATIC_DRAW);
-    }
-}
-
-void TriangleMesh::Draw()
-{
-    for (int i = 0; i < subMeshes.size(); i++) {
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPTN), 0);  //stride = 32
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexPTN), (const GLvoid*)12);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, subMeshes[i].iboId);
-        glDrawElements(GL_TRIANGLES, subMeshes[i].vertexIndices.size(), GL_UNSIGNED_INT, 0);
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
     }
 }

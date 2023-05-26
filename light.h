@@ -13,7 +13,7 @@ struct VertexP
 };
 
 // PointLight Declarations.
-class PointLight  // 點光源
+class PointLight
 {
 public:
 	// PointLight Public Methods.
@@ -80,8 +80,6 @@ public:
 		// -------------------------------------------------------
 		CreateVisGeometry();
 	}
-
-	// cutoffDeg = 聚光燈範圍 cos(角度) 內圈; totalWidthDeg 聚光燈範圍 cos(角度) 外圈
 	SpotLight(const glm::vec3 p, const glm::vec3 I, const glm::vec3 D, const float cutoffDeg, const float totalWidthDeg) {
 		position = p;
 		intensity = I;
@@ -90,7 +88,6 @@ public:
 		direction = glm::normalize(D);
 		cos_totalwidth = glm::cos(glm::radians(totalWidthDeg));
 		cos_falloffstart = glm::cos(glm::radians(cutoffDeg));
-		//std::cout << cos_totalwidth << " " << cos_falloffstart << std::endl;
 		// -------------------------------------------------------
 		CreateVisGeometry();
 	}
@@ -102,7 +99,7 @@ public:
 	glm::vec3 GetIntensity() const { return intensity; }
 	float GetCosTotalwidth() const { return cos_totalwidth; }
 	float GetCosFalloffstart() const { return cos_falloffstart; }
-	
+
 	void Draw() {
 		glPointSize(16.0f);
 		glEnableVertexAttribArray(0);
@@ -117,7 +114,6 @@ public:
 	void MoveRight(const float moveSpeed) { position += moveSpeed * glm::vec3(0.1f, 0.0f, 0.0f); }
 	void MoveUp(const float moveSpeed) { position += moveSpeed * glm::vec3(0.0f, 0.1f, 0.0f); }
 	void MoveDown(const float moveSpeed) { position += moveSpeed * glm::vec3(0.0f, -0.1f, 0.0f); }
-
 	// -------------------------------------------------------
 
 private:
@@ -139,6 +135,8 @@ private:
 	float cos_totalwidth, cos_falloffstart;
 	// -------------------------------------------------------
 };
+
+
 
 // DirectionalLight Declarations.
 class DirectionalLight

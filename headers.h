@@ -9,6 +9,9 @@
 #include <glm.hpp>
 #include <gtc/type_ptr.hpp>
 
+// OpenCV.
+#include <opencv2/opencv.hpp>
+
 // C++ STL headers.
 #include <iostream>
 #include <vector>
@@ -16,6 +19,5 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
-#include <math.h>
 
 #endif
